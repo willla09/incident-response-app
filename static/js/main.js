@@ -258,11 +258,15 @@ function sendTaskWithAssignment(actionId) {
     })
     .then(text => {
         console.log('Raw response text:', text);
+        if (text.trim().startsWith('<!doctype html>')) {
+            console.error('Received HTML response instead of JSON');
+            throw new Error('Server returned an HTML page instead of JSON. This might indicate a server-side error or redirection.');
+        }
         try {
             return JSON.parse(text);
         } catch (error) {
             console.error('Error parsing JSON:', error);
-            throw new Error('Invalid JSON response from server');
+            throw new Error('Invalid JSON response from server: ' + text);
         }
     })
     .then(data => {
