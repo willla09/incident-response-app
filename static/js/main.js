@@ -190,8 +190,22 @@ function updateTaskCount() {
 }
 
 function sendTaskWithAssignment(actionId) {
-    const assignedUser = document.querySelector(`#assigned-user-${actionId}`).value;
+    console.log('sendTaskWithAssignment called with actionId:', actionId);
+    
+    const assignedUserElement = document.querySelector(`#assigned-user-${actionId}`);
+    console.log('Assigned user element:', assignedUserElement);
+    
+    if (!assignedUserElement) {
+        console.error(`Could not find element with id: assigned-user-${actionId}`);
+        alert('Error: Could not find the assigned user element.');
+        return;
+    }
+
+    const assignedUser = assignedUserElement.value;
+    console.log('Assigned user value:', assignedUser);
+
     if (!assignedUser) {
+        console.warn('No user assigned');
         alert('Please select a user to assign the task.');
         return;
     }
@@ -207,16 +221,27 @@ function sendTaskWithAssignment(actionId) {
     })
     .then(response => {
         console.log('Response status:', response.status);
-        return response.json();
+        console.log('Response headers:', response.headers);
+        return response.text();
+    })
+    .then(text => {
+        console.log('Raw response text:', text);
+        try {
+            return JSON.parse(text);
+        } catch (error) {
+            console.error('Error parsing JSON:', error);
+            throw new Error('Invalid JSON response from server');
+        }
     })
     .then(data => {
-        console.log('Response data:', data);
+        console.log('Parsed response data:', data);
         if (data.success) {
             alert('Task sent successfully!');
             updateTaskCount();
             // Refresh the page to show the new task
             window.location.reload();
         } else {
+            console.error('Server reported failure:', data.error);
             alert(`Failed to send task: ${data.error || 'Unknown error'}`);
         }
     })
