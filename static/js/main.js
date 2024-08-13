@@ -248,13 +248,13 @@ function sendTaskWithAssignment(actionId) {
             // This is an HTML response, likely an error page
             console.error('Received HTML response instead of JSON');
             const errorMessage = text.match(/<body[^>]*>([\s\S]*)<\/body>/i)?.[1] || 'Unknown server error';
-            throw new Error(`Server returned an HTML page: ${errorMessage.trim()}`);
+            throw new Error(`Server returned an HTML page. This might indicate a server-side error or that you're not properly authenticated. Please check your login status and try again. Error details: ${errorMessage.trim()}`);
         }
         try {
             return JSON.parse(text);
         } catch (error) {
             console.error('Error parsing JSON:', error);
-            throw new Error(`Invalid response from server: ${text}`);
+            throw new Error(`Invalid response from server. The server might be experiencing issues. Please try again later or contact support if the problem persists. Response: ${text}`);
         }
     })
     .then(data => {
@@ -266,7 +266,7 @@ function sendTaskWithAssignment(actionId) {
             window.location.reload();
         } else {
             console.error('Server reported failure:', data.error);
-            throw new Error(data.error || 'Unknown error');
+            throw new Error(data.error || 'Unknown error occurred while sending the task. Please try again or contact support.');
         }
     })
     .catch(error => {
