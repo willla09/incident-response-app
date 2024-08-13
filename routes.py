@@ -409,7 +409,7 @@ def update_playbook():
         print(error_message)  # Log the error
         return jsonify({'success': False, 'error': error_message})
 
-@main_bp.route('/api/send_task', methods=['POST'])
+@main_bp.route('/send_task', methods=['POST'])
 @login_required
 def send_task():
     data = request.json
