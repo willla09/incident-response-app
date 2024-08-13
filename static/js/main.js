@@ -232,8 +232,12 @@ function sendTaskWithAssignment(actionId) {
         },
         body: JSON.stringify({ username: assignedUser }),
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Check user exists response:', response);
+        return response.json();
+    })
     .then(data => {
+        console.log('Check user exists data:', data);
         if (data.exists) {
             // If the user exists, proceed with sending the task
             return fetch('/send_task', {
