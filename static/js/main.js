@@ -224,12 +224,28 @@ function sendTaskWithAssignment(actionId) {
 
     console.log(`Sending task for action ID: ${actionId}, Assigned User: ${assignedUser}`);
 
-    fetch('/send_task', {
+    // First, check if the user exists
+    fetch('/check_user_exists', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ action_id: actionId, assigned_user: assignedUser }),
+        body: JSON.stringify({ username: assignedUser }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.exists) {
+            // If the user exists, proceed with sending the task
+            return fetch('/send_task', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ action_id: actionId, assigned_user: assignedUser }),
+            });
+        } else {
+            throw new Error('Assigned user does not exist in the system.');
+        }
     })
     .then(response => {
         console.log('Response status:', response.status);
