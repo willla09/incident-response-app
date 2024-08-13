@@ -196,13 +196,20 @@ function sendTaskWithAssignment(actionId) {
     const allSelects = document.querySelectorAll('select');
     console.log('All select elements:', allSelects);
 
-    const assignedUserElement = document.querySelector(`#assigned-user-${actionId}`);
+    // Try to find the assigned user element using different possible selectors
+    let assignedUserElement = document.querySelector(`#assigned-user-${actionId}`);
+    if (!assignedUserElement) {
+        assignedUserElement = document.querySelector(`[name="assigned-user-${actionId}"]`);
+    }
+    if (!assignedUserElement) {
+        assignedUserElement = document.querySelector(`select[data-action-id="${actionId}"]`);
+    }
     console.log('Assigned user element:', assignedUserElement);
     
     if (!assignedUserElement) {
-        console.error(`Could not find element with id: assigned-user-${actionId}`);
+        console.error(`Could not find assigned user element for action ID: ${actionId}`);
         console.log('DOM at time of error:', document.body.innerHTML);
-        alert(`Error: Could not find the assigned user element (assigned-user-${actionId}).`);
+        alert(`Error: Could not find the assigned user element for action ID: ${actionId}. Please check the HTML structure.`);
         return;
     }
 
