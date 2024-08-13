@@ -196,6 +196,8 @@ function sendTaskWithAssignment(actionId) {
         return;
     }
 
+    console.log(`Sending task for action ID: ${actionId}, Assigned User: ${assignedUser}`);
+
     fetch('/send_task', {
         method: 'POST',
         headers: {
@@ -203,18 +205,24 @@ function sendTaskWithAssignment(actionId) {
         },
         body: JSON.stringify({ action_id: actionId, assigned_user: assignedUser }),
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
     .then(data => {
+        console.log('Response data:', data);
         if (data.success) {
             alert('Task sent successfully!');
             updateTaskCount();
+            // Refresh the page to show the new task
+            window.location.reload();
         } else {
-            alert('Failed to send task. Please try again.');
+            alert(`Failed to send task: ${data.error || 'Unknown error'}`);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while sending the task.');
+        alert(`An error occurred while sending the task: ${error.message}`);
     });
 }
 
