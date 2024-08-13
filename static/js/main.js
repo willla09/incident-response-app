@@ -216,9 +216,9 @@ function sendTaskWithAssignment(actionId) {
     const assignedUser = assignedUserElement.value;
     console.log('Assigned user value:', assignedUser);
 
-    if (!assignedUser) {
-        console.warn('No user assigned');
-        alert('Please select a user to assign the task.');
+    if (!assignedUser || assignedUser.trim() === '') {
+        console.warn('No user assigned or empty user');
+        alert('Please select a valid user to assign the task.');
         return;
     }
 
