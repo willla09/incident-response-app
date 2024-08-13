@@ -431,10 +431,10 @@ def send_task():
         print(f"Error sending task: {str(e)}")  # Log the error
         return jsonify({'success': False, 'error': 'Error sending task. Please try again.'})
 
-@main_bp.route('/check_user_exists/<int:user_id>', methods=['GET'])
+@main_bp.route('/check_user_exists/<user_id>', methods=['GET'])
 @login_required
 def check_user_exists(user_id):
-    user = User.query.get(user_id)
+    user = User.query.filter((User.id == user_id) | (User.username == user_id)).first()
     return jsonify({'exists': user is not None})
 
 @main_bp.route('/assigned_tasks')

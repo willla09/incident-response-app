@@ -221,7 +221,7 @@ function sendTaskWithAssignment(actionId) {
     console.log(`Checking if user exists for ID: ${assignedUserId}`);
 
     // First, check if the user exists
-    fetch(`/check_user_exists/${assignedUserId}`)
+    fetch(`/check_user_exists/${encodeURIComponent(assignedUserId)}`)
     .then(response => {
         console.log('Check user exists response:', response);
         return handleResponse(response);
