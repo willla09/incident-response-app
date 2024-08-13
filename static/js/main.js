@@ -192,12 +192,17 @@ function updateTaskCount() {
 function sendTaskWithAssignment(actionId) {
     console.log('sendTaskWithAssignment called with actionId:', actionId);
     
+    // Log all select elements on the page
+    const allSelects = document.querySelectorAll('select');
+    console.log('All select elements:', allSelects);
+
     const assignedUserElement = document.querySelector(`#assigned-user-${actionId}`);
     console.log('Assigned user element:', assignedUserElement);
     
     if (!assignedUserElement) {
         console.error(`Could not find element with id: assigned-user-${actionId}`);
-        alert('Error: Could not find the assigned user element.');
+        console.log('DOM at time of error:', document.body.innerHTML);
+        alert(`Error: Could not find the assigned user element (assigned-user-${actionId}).`);
         return;
     }
 
