@@ -230,7 +230,7 @@ function sendTaskWithAssignment(actionId) {
         console.log('Check user exists data:', data);
         if (data.exists) {
             console.log(`User exists. Proceeding to send task for action ID: ${actionId}, Assigned User ID: ${assignedUserId}`);
-            const sendTaskUrl = '/send_task';
+            const sendTaskUrl = '/api/send_task';
             console.log(`Sending task to URL: ${sendTaskUrl}`);
             return fetch(sendTaskUrl, {
                 method: 'POST',
