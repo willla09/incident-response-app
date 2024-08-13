@@ -189,32 +189,42 @@ function updateTaskCount() {
         });
 }
 
+function sendTaskWithAssignment(actionId) {
+    const assignedUser = document.querySelector(`#assigned-user-${actionId}`).value;
+    if (!assignedUser) {
+        alert('Please select a user to assign the task.');
+        return;
+    }
+
+    fetch('/send_task', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action_id: actionId, assigned_user: assignedUser }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Task sent successfully!');
+            updateTaskCount();
+        } else {
+            alert('Failed to send task. Please try again.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while sending the task.');
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     updateTaskCount();
 
     document.querySelectorAll('.send-task').forEach(button => {
         button.addEventListener('click', function() {
             const actionId = this.getAttribute('data-action-id');
-            fetch('/send_task', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ action_id: actionId }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Task sent successfully!');
-                    updateTaskCount();
-                } else {
-                    alert('Failed to send task. Please try again.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while sending the task.');
-            });
+            sendTaskWithAssignment(actionId);
         });
     });
 });
