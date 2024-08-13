@@ -222,7 +222,7 @@ function sendTaskWithAssignment(actionId) {
 
     // First, check if the user exists
     fetch(`/check_user_exists/${assignedUserId}`)
-    .then(response => response.json())
+    .then(response => handleResponse(response))
     .then(data => {
         if (data.exists) {
             console.log(`User exists. Proceeding to send task for action ID: ${actionId}, Assigned User ID: ${assignedUserId}`);
@@ -237,26 +237,7 @@ function sendTaskWithAssignment(actionId) {
             throw new Error(`User with ID ${assignedUserId} does not exist in the system.`);
         }
     })
-    .then(response => {
-        console.log('Response status:', response.status);
-        console.log('Response headers:', response.headers);
-        return response.text();
-    })
-    .then(text => {
-        console.log('Raw response text:', text);
-        if (text.trim().startsWith('<!DOCTYPE html>')) {
-            // This is an HTML response, likely an error page
-            console.error('Received HTML response instead of JSON');
-            const errorMessage = text.match(/<body[^>]*>([\s\S]*)<\/body>/i)?.[1] || 'Unknown server error';
-            throw new Error(`Server returned an HTML page. This might indicate a server-side error or that you're not properly authenticated. Please check your login status and try again. Error details: ${errorMessage.trim()}`);
-        }
-        try {
-            return JSON.parse(text);
-        } catch (error) {
-            console.error('Error parsing JSON:', error);
-            throw new Error(`Invalid response from server. The server might be experiencing issues. Please try again later or contact support if the problem persists. Response: ${text}`);
-        }
-    })
+    .then(response => handleResponse(response))
     .then(data => {
         console.log('Parsed response data:', data);
         if (data.success) {
@@ -272,6 +253,25 @@ function sendTaskWithAssignment(actionId) {
     .catch(error => {
         console.error('Error:', error);
         alert(`An error occurred while sending the task: ${error.message}`);
+    });
+}
+
+function handleResponse(response) {
+    console.log('Response status:', response.status);
+    console.log('Response headers:', response.headers);
+    return response.text().then(text => {
+        console.log('Raw response text:', text);
+        if (text.trim().startsWith('<!DOCTYPE html>')) {
+            console.error('Received HTML response instead of JSON');
+            const errorMessage = text.match(/<body[^>]*>([\s\S]*)<\/body>/i)?.[1] || 'Unknown server error';
+            throw new Error(`Server returned an HTML page. This might indicate a server-side error or that you're not properly authenticated. Please check your login status and try again. Error details: ${errorMessage.trim()}`);
+        }
+        try {
+            return JSON.parse(text);
+        } catch (error) {
+            console.error('Error parsing JSON:', error);
+            throw new Error(`Invalid response from server. The server might be experiencing issues. Please try again later or contact support if the problem persists. Response: ${text}`);
+        }
     });
 }
 
