@@ -409,29 +409,27 @@ def update_playbook():
         print(error_message)  # Log the error
         return jsonify({'success': False, 'error': error_message})
 
-@main_bp.route('/send_task', methods=['POST'])
+@main_bp.route('/api/send_task', methods=['POST'])
 @login_required
 def send_task():
-    action_id = request.json.get('action_id')
+    data = request.json
+    action_id = data.get('action_id')
+    assigned_user_id = data.get('assigned_user_id')
+    
     action = Action.query.get_or_404(action_id)
+    assigned_user = User.query.get_or_404(assigned_user_id)
     
-    if action.assigned_to == 'Not Assigned':
-        return jsonify({'success': False, 'error': 'Action is not assigned to any user'})
+    action.assigned_to = assigned_user.username
+    notification = TaskNotification(user_id=assigned_user.id, action_id=action.id, incident_id=action.incident_id)
+    db.session.add(notification)
     
-    assigned_user = User.query.filter_by(username=action.assigned_to).first()
-    
-    if assigned_user:
-        notification = TaskNotification(user_id=assigned_user.id, action_id=action.id, incident_id=action.incident_id)
-        db.session.add(notification)
-        try:
-            db.session.commit()
-            return jsonify({'success': True, 'message': 'Task sent successfully'})
-        except Exception as e:
-            db.session.rollback()
-            print(f"Error sending task: {str(e)}")  # Log the error
-            return jsonify({'success': False, 'error': 'Error sending task. Please try again.'})
-    else:
-        return jsonify({'success': False, 'error': 'Assigned user not found'})
+    try:
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Task sent successfully'})
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error sending task: {str(e)}")  # Log the error
+        return jsonify({'success': False, 'error': 'Error sending task. Please try again.'})
 
 @main_bp.route('/assigned_tasks')
 @login_required
