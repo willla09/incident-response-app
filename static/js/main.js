@@ -222,8 +222,12 @@ function sendTaskWithAssignment(actionId) {
 
     // First, check if the user exists
     fetch(`/check_user_exists/${assignedUserId}`)
-    .then(response => handleResponse(response))
+    .then(response => {
+        console.log('Check user exists response:', response);
+        return handleResponse(response);
+    })
     .then(data => {
+        console.log('Check user exists data:', data);
         if (data.exists) {
             console.log(`User exists. Proceeding to send task for action ID: ${actionId}, Assigned User ID: ${assignedUserId}`);
             return fetch('/send_task', {
@@ -237,7 +241,10 @@ function sendTaskWithAssignment(actionId) {
             throw new Error(`User with ID ${assignedUserId} does not exist in the system.`);
         }
     })
-    .then(response => handleResponse(response))
+    .then(response => {
+        console.log('Send task response:', response);
+        return handleResponse(response);
+    })
     .then(data => {
         console.log('Parsed response data:', data);
         if (data.success) {
@@ -252,7 +259,13 @@ function sendTaskWithAssignment(actionId) {
     })
     .catch(error => {
         console.error('Error:', error);
-        alert(`An error occurred while sending the task: ${error.message}`);
+        if (error.message.includes('Failed to fetch')) {
+            alert(`Network error: Could not connect to the server. Please check your internet connection and try again.`);
+        } else if (error.message.includes('404')) {
+            alert(`Server error: The requested URL was not found on this server. Please check if the server is running and the routes are correctly set up.`);
+        } else {
+            alert(`An error occurred while sending the task: ${error.message}`);
+        }
     });
 }
 
