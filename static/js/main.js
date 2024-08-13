@@ -192,10 +192,6 @@ function updateTaskCount() {
 function sendTaskWithAssignment(actionId) {
     console.log('sendTaskWithAssignment called with actionId:', actionId);
     
-    // Log all select elements on the page
-    const allSelects = document.querySelectorAll('select');
-    console.log('All select elements:', allSelects);
-
     // Try to find the assigned user element using different possible selectors
     let assignedUserElement = document.querySelector(`#assigned-user-${actionId}`);
     if (!assignedUserElement) {
@@ -213,43 +209,23 @@ function sendTaskWithAssignment(actionId) {
         return;
     }
 
-    const assignedUser = assignedUserElement.value;
-    console.log('Assigned user value:', assignedUser);
+    const assignedUserId = assignedUserElement.value;
+    console.log('Assigned user ID:', assignedUserId);
 
-    if (!assignedUser || assignedUser.trim() === '') {
-        console.warn('No user assigned or empty user');
+    if (!assignedUserId || assignedUserId.trim() === '') {
+        console.warn('No user assigned or empty user ID');
         alert('Please select a valid user to assign the task.');
         return;
     }
 
-    console.log(`Sending task for action ID: ${actionId}, Assigned User: ${assignedUser}`);
+    console.log(`Sending task for action ID: ${actionId}, Assigned User ID: ${assignedUserId}`);
 
-    // First, check if the user exists
-    fetch('/check_user_exists', {
+    fetch('/send_task', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username: assignedUser }),
-    })
-    .then(response => {
-        console.log('Check user exists response:', response);
-        return response.json();
-    })
-    .then(data => {
-        console.log('Check user exists data:', data);
-        if (data.exists) {
-            // If the user exists, proceed with sending the task
-            return fetch('/send_task', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ action_id: actionId, assigned_user: assignedUser }),
-            });
-        } else {
-            throw new Error('Assigned user does not exist in the system.');
-        }
+        body: JSON.stringify({ action_id: actionId, assigned_user_id: assignedUserId }),
     })
     .then(response => {
         console.log('Response status:', response.status);
@@ -258,10 +234,6 @@ function sendTaskWithAssignment(actionId) {
     })
     .then(text => {
         console.log('Raw response text:', text);
-        if (text.trim().startsWith('<!doctype html>')) {
-            console.error('Received HTML response instead of JSON');
-            throw new Error('Server returned an HTML page instead of JSON. This might indicate a server-side error or redirection.');
-        }
         try {
             return JSON.parse(text);
         } catch (error) {
