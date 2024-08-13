@@ -1,0 +1,301 @@
+/* Modern, sleek design */
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2c3e50;
+    --background-color: #ecf0f1;
+    --text-color: #34495e;
+    --accent-color: #e74c3c;
+    --border-color: #bdc3c7;
+}
+
+.user-profile-icon {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+}
+
+.user-profile-icon .dropdown-toggle::after {
+    display: none;
+}
+
+.user-profile-icon .dropdown-menu {
+    left: auto;
+    right: 0;
+}
+
+.user-profile-icon .fa-user-circle {
+    color: var(--secondary-color);
+}
+
+/* Editable fields */
+.editable-field {
+    padding: 5px;
+    transition: all 0.3s ease;
+    border-radius: 5px;
+}
+
+.editable-field:hover {
+    background-color: #f8f9fa;
+}
+
+.editable-field:focus {
+    background-color: #fff;
+    outline: none;
+}
+
+/* Editable table */
+.editable-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+}
+
+.editable-table th,
+.editable-table td {
+    padding: 10px;
+    vertical-align: middle;
+}
+
+.editable-table th {
+    background-color: var(--secondary-color);
+    color: #fff;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.editable-table td {
+    background-color: #fff;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.editable-table tr td:first-child {
+    border-left: 1px solid var(--border-color);
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+}
+
+.editable-table tr td:last-child {
+    border-right: 1px solid var(--border-color);
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+/* Phase field styling */
+.phase-select {
+    border-radius: 20px;
+    padding: 5px 10px;
+    font-weight: bold;
+    text-align: center;
+    display: inline-block;
+    background-color: transparent;
+    border: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    padding-right: 20px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3E%3Cpath d='M0 2l4 4 4-4z' fill='%23000000'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 5px center;
+}
+
+.phase-select[data-phase="Detection/Analysis"] {
+    background-color: #ffcccb;
+}
+
+.phase-select[data-phase="Containment"] {
+    background-color: #ffdab9;
+}
+
+.phase-select[data-phase="Eradication"] {
+    background-color: #e6f3ff;
+}
+
+.phase-select[data-phase="Recovery"] {
+    background-color: #e6ffe6;
+}
+
+/* Status-based row styling */
+.editable-table tr.status-not-applicable {
+    background-color: #f0f0f0;
+}
+
+/* Resizable columns */
+.resizable {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+.resizable th {
+    position: relative;
+    overflow: hidden;
+}
+
+.resizable th .resizer {
+    position: absolute;
+    top: 0;
+    right: -3px;
+    width: 6px;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.1);
+    cursor: col-resize;
+    z-index: 1;
+}
+
+.resizable th .resizer:hover,
+.resizable th .resizer.resizing {
+    background-color: var(--primary-color);
+}
+
+.resizable th {
+    position: relative;
+    overflow: visible;
+}
+
+/* Ensure all table cells have a minimum width */
+.resizable td,
+.resizable th {
+    min-width: 100px;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Specific width for the phase column */
+.resizable th[data-column="phase"],
+.resizable td[data-column="phase"] {
+    width: 150px;
+    min-width: 150px;
+    max-width: 200px;
+}
+
+/* Dropdown icon */
+.input-group-text {
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+}
+
+/* Sidebar icons */
+.nav-link .fas {
+    margin-left: 5px;
+    transition: transform 0.3s ease;
+}
+
+.nav-link[aria-expanded="true"] .fas {
+    transform: rotate(90deg);
+}
+
+body {
+    font-family: 'Roboto', Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.container-fluid {
+    padding: 0;
+}
+
+#sidebar {
+    background-color: var(--secondary-color);
+    color: white;
+    min-height: 100vh;
+    padding-top: 20px;
+}
+
+#sidebar .nav-link {
+    color: white;
+    padding: 10px 15px;
+}
+
+#sidebar .nav-link:hover,
+#sidebar .nav-link.active {
+    background-color: var(--primary-color);
+}
+
+.sidebar-submenu {
+    padding-left: 20px;
+}
+
+.sidebar-incident {
+    color: #adb5bd;
+    font-size: 0.9em;
+    padding: 5px 15px;
+    transition: all 0.3s ease;
+}
+
+.sidebar-incident:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+main {
+    padding: 20px;
+}
+
+h1, h2, h3 {
+    color: var(--secondary-color);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+}
+
+.table {
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+}
+
+.table thead th {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.table-striped tbody tr:nth-of-type(even) {
+    background-color: #fff;
+}
+
+.table-striped tbody tr td {
+    background-color: inherit;
+}
+
+.modal-content {
+    border-radius: 0;
+}
+
+.modal-header {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+/* Table cell text wrapping */
+.editable-table td {
+    white-space: normal;
+    word-wrap: break-word;
+    max-width: 200px; /* Adjust this value as needed */
+}
+
+.editable-table th {
+    white-space: nowrap;
+}

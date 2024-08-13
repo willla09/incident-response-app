@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Tasks Assigned to Me</h1>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Phase</th>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for task in tasks %}
+        <tr>
+            <td>{{ task.action.phase }}</td>
+            <td>{{ task.action.title if task.action else 'N/A' }}</td>
+            <td>{{ task.action.description if task.action else 'N/A' }}</td>
+            <td>
+                <select class="form-control status-select" data-task-id="{{ task.id }}">
+                    <option value="Not Started" {% if task.action.status == 'Not Started' %}selected{% endif %}>Not Started</option>
+                    <option value="In Progress" {% if task.action.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                    <option value="Completed" {% if task.action.status == 'Completed' %}selected{% endif %}>Completed</option>
+                </select>
+            </td>
+            <td>
+                <button class="btn btn-danger btn-sm delete-task" data-task-id="{{ task.id }}">Delete</button>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="5">No tasks assigned to you at the moment.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+    document.querySelectorAll('.status-select').forEach(select => {
+        select.addEventListener('change', function() {
+            const taskId = this.dataset.taskId;
+            const newStatus = this.value;
+            fetch('/update_task_status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ task_id: taskId, status: newStatus }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    alert('Failed to update task status');
+                }
+            });
+        });
+    });
+
+    document.querySelectorAll('.delete-task').forEach(button => {
+        button.addEventListener('click', function() {
+            const taskId = this.dataset.taskId;
+            if (confirm('Are you sure you want to delete this task?')) {
+                fetch('/delete_task', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ task_id: taskId }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        this.closest('tr').remove();
+                    } else {
+                        alert('Failed to delete task');
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

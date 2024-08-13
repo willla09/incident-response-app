@@ -1,0 +1,404 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h2 id="playbook-name" contenteditable="true">{{ playbook.name }}</h2>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="{{ url_for('main.playbooks') }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+
+<p>Description: <span id="playbook-description" contenteditable="true">{{ playbook.description }}</span></p>
+<p>Created by: <span id="playbook-created-by" contenteditable="true">{{ playbook.created_by }}</span></p>
+
+<div class="row mb-3">
+    <div class="col-md-12">
+        <button id="add-action" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addActionModal">Add Action</button>
+    </div>
+</div>
+
+<!-- Add Action Modal -->
+<div class="modal fade" id="addActionModal" tabindex="-1" aria-labelledby="addActionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addActionModalLabel">Add New Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addActionForm">
+                    <div class="mb-3">
+                        <label for="actionPhase" class="form-label">Phase</label>
+                        <select class="form-select" id="actionPhase" required>
+                            <option value="">Select a phase...</option>
+                            <option value="Detection/Analysis">Detection/Analysis</option>
+                            <option value="Containment">Containment</option>
+                            <option value="Eradication">Eradication</option>
+                            <option value="Recovery">Recovery</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="actionTitle" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="actionTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="actionDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="actionDescription" rows="3" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveNewAction">Save Action</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<table class="table table-striped" id="playbook-actions-table">
+    <thead>
+        <tr>
+            <th>Phase</th>
+            <th>Title</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody id="playbook-actions">
+        {% for action in playbook_actions %}
+        <tr>
+            <td>{{ action.phase }}</td>
+            <td>{{ action.title }}</td>
+            <td>{{ action.description }}</td>
+            <td>
+                <button class="btn btn-sm btn-danger delete-action" data-action-id="{{ action.id }}">Delete</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<button class="btn btn-danger delete-playbook" data-playbook-name="{{ playbook.name }}">Delete Playbook</button>
+
+<!-- Add Action Modal -->
+<div class="modal fade" id="addActionModal" tabindex="-1" aria-labelledby="addActionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addActionModalLabel">Add New Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addActionForm">
+                    <div class="mb-3">
+                        <label for="actionPhase" class="form-label">Phase</label>
+                        <input type="text" class="form-control" id="actionPhase" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="actionTitle" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="actionTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="actionDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="actionDescription" rows="3" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveNewAction">Save Action</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Add event listeners for delete buttons
+    document.querySelectorAll('.delete-action').forEach(button => {
+        button.addEventListener('click', function() {
+            const actionId = this.getAttribute('data-action-id');
+            if (confirm('Are you sure you want to delete this action?')) {
+                fetch('/delete_playbook_action', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ action_id: actionId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Action deleted successfully');
+                        location.reload();
+                    } else {
+                        alert('Error deleting action: ' + data.error);
+                    }
+                });
+            }
+        });
+    });
+
+    document.querySelector('.delete-playbook').addEventListener('click', function() {
+        const playbookName = this.getAttribute('data-playbook-name');
+        if (confirm(`Are you sure you want to delete the playbook "${playbookName}"?`)) {
+            fetch('/delete_playbook', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ playbook_name: playbookName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Playbook deleted successfully');
+                    window.location.href = '/playbooks';
+                } else {
+                    alert('Error deleting playbook: ' + data.error);
+                }
+            });
+        }
+    });
+
+    // Edit playbook functionality
+    const editButton = document.getElementById('edit-playbook');
+    const saveButton = document.getElementById('save-playbook');
+    const addActionButton = document.getElementById('add-action');
+    const playbookName = document.getElementById('playbook-name');
+    const playbookDescription = document.getElementById('playbook-description');
+    const actionsTable = document.getElementById('playbook-actions-table');
+
+    editButton.addEventListener('click', function() {
+        playbookName.contentEditable = true;
+        playbookDescription.contentEditable = true;
+        actionsTable.querySelectorAll('td[contenteditable="false"]').forEach(td => td.contentEditable = true);
+        editButton.classList.add('d-none');
+        saveButton.classList.remove('d-none');
+        addActionButton.classList.remove('d-none');
+    });
+
+    saveButton.addEventListener('click', function() {
+        const updatedPlaybook = {
+            name: playbookName.textContent,
+            description: playbookDescription.textContent,
+            actions: []
+        };
+
+    // Handle adding new action
+    document.getElementById('saveNewAction').addEventListener('click', function() {
+        const phase = document.getElementById('actionPhase').value;
+        const title = document.getElementById('actionTitle').value;
+        const description = document.getElementById('actionDescription').value;
+        const playbookId = {{ playbook.id }};
+
+        if (phase && title && description) {
+            const actionData = {
+                playbook_id: playbookId,
+                phase: phase,
+                title: title,
+                description: description
+            };
+
+            fetch('/add_playbook_action', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify(actionData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const actionsTable = document.getElementById('playbook-actions');
+                    const newRow = actionsTable.insertRow();
+                    newRow.innerHTML = `
+                        <td>${phase}</td>
+                        <td>${title}</td>
+                        <td>${description}</td>
+                        <td>
+                            <button class="btn btn-sm btn-danger delete-action" data-action-id="${data.action_id}">Delete</button>
+                        </td>
+                    `;
+                    
+                    // Add event listener to the new delete button
+                    newRow.querySelector('.delete-action').addEventListener('click', function() {
+                        deleteAction(this.getAttribute('data-action-id'));
+                    });
+
+                    // Close the modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addActionModal'));
+                    modal.hide();
+
+                    // Clear the form
+                    document.getElementById('addActionForm').reset();
+                } else {
+                    alert('Error adding action: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while adding the action: ' + error.message);
+            });
+        } else {
+            alert('Please fill in all fields');
+        }
+    });
+
+    // Function to delete an action
+    function deleteAction(actionId) {
+        if (confirm('Are you sure you want to delete this action?')) {
+            fetch('/delete_playbook_action', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ action_id: actionId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Action deleted successfully');
+                    // Remove the row from the table
+                    document.querySelector(`button[data-action-id="${actionId}"]`).closest('tr').remove();
+                } else {
+                    alert('Error deleting action: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while deleting the action');
+            });
+        }
+    }
+
+    // Add event listeners to existing delete buttons
+    document.querySelectorAll('.delete-action').forEach(button => {
+        button.addEventListener('click', function() {
+            deleteAction(this.getAttribute('data-action-id'));
+        });
+    });
+
+        actionsTable.querySelectorAll('tr').forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 3) {
+                updatedPlaybook.actions.push({
+                    phase: cells[0].textContent,
+                    title: cells[1].textContent,
+                    description: cells[2].textContent
+                });
+            }
+        });
+
+        fetch('/update_playbook', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updatedPlaybook)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Playbook updated successfully');
+                playbookName.contentEditable = false;
+                playbookDescription.contentEditable = false;
+                actionsTable.querySelectorAll('td[contenteditable="true"]').forEach(td => td.contentEditable = false);
+                editButton.classList.remove('d-none');
+                saveButton.classList.add('d-none');
+                addActionButton.classList.add('d-none');
+            } else {
+                alert('Error updating playbook: ' + data.error);
+            }
+        });
+    });
+
+    // Add Action functionality
+    addActionButton.addEventListener('click', function() {
+        const modal = new bootstrap.Modal(document.getElementById('addActionModal'));
+        modal.show();
+    });
+
+    document.getElementById('saveNewAction').addEventListener('click', function() {
+        const phase = document.getElementById('actionPhase').value;
+        const title = document.getElementById('actionTitle').value;
+        const description = document.getElementById('actionDescription').value;
+
+        if (phase && title && description) {
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td contenteditable="true">${phase}</td>
+                <td contenteditable="true">${title}</td>
+                <td contenteditable="true">${description}</td>
+                <td>
+                    <button class="btn btn-sm btn-danger delete-action">Delete</button>
+                </td>
+            `;
+            document.getElementById('playbook-actions').appendChild(newRow);
+
+            // Close the modal
+            bootstrap.Modal.getInstance(document.getElementById('addActionModal')).hide();
+
+            // Clear the form
+            document.getElementById('addActionForm').reset();
+        } else {
+            alert('Please fill in all fields');
+        }
+    });
+
+    document.getElementById('importPlaybookForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        let formData = new FormData(this);
+        
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                console.error('Error importing playbook:', data.error);
+                let errorMessage = 'Error importing playbook: ' + data.error;
+                document.getElementById('importPlaybookError').textContent = errorMessage;
+                document.getElementById('importPlaybookError').style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            let errorMessage = 'Error importing playbook: ' + error.message;
+            document.getElementById('importPlaybookError').textContent = errorMessage;
+            document.getElementById('importPlaybookError').style.display = 'block';
+        });
+    });
+
+    // Make content editable
+    document.querySelectorAll('[contenteditable="true"]').forEach(element => {
+        element.addEventListener('blur', function() {
+            // Here you would typically send an AJAX request to update the data
+            console.log('Content changed:', this.id, this.textContent);
+        });
+    });
+
+    // Handle table cell editing
+    document.querySelectorAll('#playbook-actions td[contenteditable="true"]').forEach(cell => {
+        cell.addEventListener('blur', function() {
+            const row = this.closest('tr');
+            const actionId = row.querySelector('.delete-action').dataset.actionId;
+            const phase = row.cells[0].textContent;
+            const title = row.cells[1].textContent;
+            const description = row.cells[2].textContent;
+            
+            // Here you would typically send an AJAX request to update the action
+            console.log('Action updated:', actionId, phase, title, description);
+        });
+    });
+</script>
+{% endblock %}

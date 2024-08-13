@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Incident Dashboard</h1>
+
+<button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#createIncidentModal">
+    Create New Incident
+</button>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Total Incidents</h5>
+                <p class="card-text display-4">{{ active_incidents|length + closed_incidents|length }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Active Incidents</h5>
+                <p class="card-text display-4">{{ active_incidents|length }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h2 class="mt-5">Active Incidents</h2>
+<table class="table table-striped resizable">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Severity</th>
+            <th>Handler</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for incident in active_incidents %}
+        <tr>
+            <td><a href="{{ url_for('main.active_incident', id=incident.id) }}">{{ incident.title }}</a></td>
+            <td>{{ incident.severity }}</td>
+            <td>{{ incident.handler }}</td>
+            <td>
+                <span class="badge {% if incident.status == 'in-progress' %}bg-warning{% else %}bg-secondary{% endif %}">
+                    {{ incident.status|capitalize }}
+                </span>
+            </td>
+            <td>
+                <button class="btn btn-sm btn-danger" onclick="deleteIncident({{ incident.id }})">Delete</button>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<h2>Closed Incidents</h2>
+<table class="table table-striped resizable">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Severity</th>
+            <th>Handler</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for incident in closed_incidents %}
+        <tr>
+            <td><a href="{{ url_for('main.closed_incident', id=incident.id) }}">{{ incident.title }}</a></td>
+            <td>{{ incident.severity }}</td>
+            <td>{{ incident.handler }}</td>
+            <td>
+                <span class="badge bg-secondary">Closed</span>
+            </td>
+            <td>
+                <button class="btn btn-sm btn-danger" onclick="deleteIncident({{ incident.id }})">Delete</button>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<!-- Create New Incident Modal -->
+<div class="modal fade" id="createIncidentModal" tabindex="-1" aria-labelledby="createIncidentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createIncidentModalLabel">Create New Incident</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createIncidentForm" action="{{ url_for('main.create_incident') }}" method="post">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title:</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="severity" class="form-label">Severity:</label>
+                        <select class="form-select" id="severity" name="severity" required>
+                            <option value="Security Investigation">Security Investigation</option>
+                            <option value="S3">S3</option>
+                            <option value="S2">S2</option>
+                            <option value="S1">S1</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description:</label>
+                        <textarea class="form-control" id="description" name="description" required></textarea>
+                    </div>
+                    <div class="mb-3">                                                                                                                                                                                
+                        <label for="handler" class="form-label">Incident Handler</label>                                                                                                                              
+                        <input type="text" class="form-control" id="handler" name="handler" value="Not Assigned" required>                                                                                            
+                    </div>  
+                    <div class="mb-3">                                                                                                                                                                                
+                        <label for="playbook" class="form-label">Import Playbook</label>                                                                                                                              
+                        <select class="form-select" id="playbook" name="playbook" required>                                                                                                                           
+                            <option value="No Playbook">No Playbook</option>                                                                                                                                          
+                            <option value="Malware Playbook">Malware Playbook</option>                                                                                                                                
+                            <option value="DDoS Playbook">DDoS Playbook</option>                                                                                                                                      
+                            <option value="Insider Threat Playbook">Insider Threat Playbook</option>                                                                                                                  
+                            <option value="Supply Chain Attack Playbook">Supply Chain Attack Playbook</option>                                                                                                        
+                            <option value="Phishing Playbook">Phishing Playbook</option>                                                                                                                              
+                        </select>                                                                                                                                                                                     
+                    </div>                                                                                                                                                                                            
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" form="createIncidentForm" class="btn btn-primary">Create Incident</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('createIncidentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    fetch("{{ url_for('main.create_incident') }}", {
+        method: 'POST',
+        body: new FormData(this),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = "{{ url_for('main.active_incident', id=0) }}".replace('/0', '/' + data.incident_id);
+        } else {
+            alert('Error creating incident');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error creating incident');
+    });
+});
+</script>
+{% endblock %}

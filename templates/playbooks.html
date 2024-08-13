@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2>Playbooks Dashboard</h2>
+    </div>
+</div>
+<div class="row mb-4">
+    <div class="col-md-12">
+        <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#createPlaybookModal">
+            Create Playbook
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importPlaybookModal">
+            Import Playbook
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <p>Debug: Number of playbooks: {{ playbooks|length }}</p>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Playbook Name</th>
+                    <th>Description</th>
+                    <th>Created By</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for playbook in playbooks %}
+                <tr>
+                    <td>{{ playbook.name }}</td>
+                    <td>{{ playbook.description }}</td>
+                    <td>{{ playbook.created_by }}</td>
+                    <td>
+                        <a href="{{ url_for('main.view_playbook', playbook_id=playbook.id) }}" class="btn btn-sm btn-info">View</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4">No playbooks found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Create Playbook Modal -->
+<div class="modal fade" id="createPlaybookModal" tabindex="-1" aria-labelledby="createPlaybookModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createPlaybookModalLabel">Create New Playbook</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createPlaybookForm">
+                    <div class="mb-3">
+                        <label for="playbookTitle" class="form-label">Playbook Title</label>
+                        <input type="text" class="form-control" id="playbookTitle" name="playbook_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="playbookDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="playbookDescription" name="playbook_description" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="playbookCreatedBy" class="form-label">Created By</label>
+                        <input type="text" class="form-control" id="playbookCreatedBy" name="playbook_created_by" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="submitCreatePlaybook">Create Playbook</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import Playbook Modal -->
+<div class="modal fade" id="importPlaybookModal" tabindex="-1" aria-labelledby="importPlaybookModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importPlaybookModalLabel">Import Playbook</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="importPlaybookForm" action="{{ url_for('main.import_playbook') }}" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="playbook_name" class="form-label">Playbook Name:</label>
+                        <input type="text" class="form-control" id="playbook_name" name="playbook_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="playbook_description" class="form-label">Playbook Description:</label>
+                        <textarea class="form-control" id="playbook_description" name="playbook_description" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="playbook_created_by" class="form-label">Created By:</label>
+                        <input type="text" class="form-control" id="playbook_created_by" name="playbook_created_by" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="csv_file" class="form-label">CSV File:</label>
+                        <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Import Playbook</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Playbook Modal -->
+<div class="modal fade" id="editPlaybookModal" tabindex="-1" aria-labelledby="editPlaybookModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editPlaybookModalLabel">Edit Playbook</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editPlaybookForm">
+                    <div class="mb-3">
+                        <label for="editPlaybookSelect" class="form-label">Select Playbook</label>
+                        <select class="form-select" id="editPlaybookSelect" required>
+                            <option value="">Choose a playbook...</option>
+                            {% for playbook in playbooks %}
+                            <option value="{{ playbook[0] }}">{{ playbook[0] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Edit Selected Playbook</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<!-- Import Playbook Modal -->
+<div class="modal fade" id="importPlaybookModal" tabindex="-1" aria-labelledby="importPlaybookModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importPlaybookModalLabel">Import Playbook</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="importPlaybookForm" action="{{ url_for('main.import_playbook') }}" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="playbook_name" class="form-label">Playbook Name:</label>
+                        <input type="text" class="form-control" id="playbook_name" name="playbook_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="playbook_description" class="form-label">Playbook Description:</label>
+                        <textarea class="form-control" id="playbook_description" name="playbook_description" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="playbook_created_by" class="form-label">Created By:</label>
+                        <input type="text" class="form-control" id="playbook_created_by" name="playbook_created_by" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="csv_file" class="form-label">CSV File:</label>
+                        <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">CSV Template:</label>
+                        <p>Download the template and fill it with your playbook actions:</p>
+                        <a href="{{ url_for('static', filename='playbook_template.csv') }}" download class="btn btn-secondary">Download Template</a>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Playbook Actions:</label>
+                        <div id="playbook-actions">
+                            <!-- Action inputs will be dynamically added here -->
+                        </div>
+                        <button type="button" class="btn btn-secondary mt-2" id="add-action">Add Action</button>
+                    </div>
+                </form>
+                <div id="importPlaybookError" class="alert alert-danger" style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" form="importPlaybookForm" class="btn btn-primary">Import Playbook</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('editPlaybookSelect').addEventListener('change', function() {
+        const selectedPlaybook = this.value;
+        if (selectedPlaybook) {
+            window.location.href = `/playbooks/${selectedPlaybook}`;
+        }
+    });
+
+    let actionCount = 0;
+
+    document.getElementById('add-action').addEventListener('click', function() {
+        actionCount++;
+        const actionHtml = `
+            <div class="action-input mb-3">
+                <h5>Action ${actionCount}</h5>
+                <select class="form-select mb-2" name="action-phase-${actionCount}" required>
+                    <option value="">Select phase...</option>
+                    <option value="Detection/Analysis">Detection/Analysis</option>
+                    <option value="Containment">Containment</option>
+                    <option value="Eradication">Eradication</option>
+                    <option value="Recovery">Recovery</option>
+                </select>
+                <input type="text" class="form-control mb-2" name="action-title-${actionCount}" placeholder="Action Title" required>
+                <textarea class="form-control mb-2" name="action-description-${actionCount}" placeholder="Action Description" required></textarea>
+            </div>
+        `;
+        document.getElementById('playbook-actions').insertAdjacentHTML('beforeend', actionHtml);
+    });
+
+    document.getElementById('submitCreatePlaybook').addEventListener('click', function() {
+        const formData = new FormData(document.getElementById('createPlaybookForm'));
+        const playbookData = {
+            playbook_name: formData.get('playbook_name'),
+            playbook_description: formData.get('playbook_description'),
+            playbook_created_by: formData.get('playbook_created_by'),
+            playbook_actions: []
+        };
+
+        for (let i = 1; i <= actionCount; i++) {
+            playbookData.playbook_actions.push({
+                phase: formData.get(`action-phase-${i}`),
+                title: formData.get(`action-title-${i}`),
+                description: formData.get(`action-description-${i}`)
+            });
+        }
+
+        fetch('/create_playbook', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(playbookData),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                const modal = bootstrap.Modal.getInstance(document.getElementById('createPlaybookModal'));
+                modal.hide();
+                location.reload();
+            } else {
+                throw new Error(data.error || 'Unknown error occurred');
+            }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            alert('An error occurred while creating the playbook: ' + error.message);
+        });
+    });
+</script>
+{% endblock %}

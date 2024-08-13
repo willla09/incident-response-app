@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center">
+    <h1>Active Incident: <span id="incident-title" class="editable-field" contenteditable="true">{{ incident.title }}</span></h1>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <p><strong>Severity:</strong> 
+            {% macro render_option(value, selected_value, display_value=None) -%}
+                <option value="{{ value|e }}" {% if selected_value == value %}selected{% endif %}>
+                    {{- (display_value if display_value is not none else value)|e -}}
+                </option>
+            {%- endmacro %}
+
+            <select id="incident-severity" class="editable-field">
+                {{ render_option('Security Investigation', incident.severity) }}
+                {{ render_option('S3', incident.severity) }}
+                {{ render_option('S2', incident.severity) }}
+                {{ render_option('S1', incident.severity) }}
+            </select>
+        </p>
+        <p><strong>Description:</strong> <span id="incident-description" class="editable-field" contenteditable="true">{{ incident.description }}</span></p>
+    </div>
+    <div class="col-md-6">
+        <p><strong>Handler:</strong> 
+            <select id="incident-handler" class="editable-field">
+                {{ render_option('Not Assigned', incident.handler) }}
+                <!-- Add more options for users here -->
+            </select>
+        </p>
+        <p><strong>Status:</strong> 
+            <select id="incident-status" class="editable-field">
+                {{ render_option('in-progress', incident.status, 'In Progress') }}
+                {{ render_option('closed', incident.status, 'Closed') }}
+            </select>
+        </p>
+    </div>
+</div>
+
+<h2>Actions</h2>
+<button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addActionModal">
+    Add New Action
+</button>
+<table class="table table-striped editable-table resizable" id="actions-table">
+    <thead>
+        <tr>
+            <th>Phase</th>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Assigned To</th>
+            <th>Status</th>
+            <th>Send Task</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for action in actions %}
+        <tr class="{% if action.status == 'Not Applicable' %}status-not-applicable{% endif %}">
+            <td>
+                <select class="form-control editable-field phase-select" data-field="phase" data-action-id="{{ action.id }}">
+                    {{ render_option('Detection/Analysis', action.phase) }}
+                    {{ render_option('Containment', action.phase) }}
+                    {{ render_option('Eradication', action.phase) }}
+                    {{ render_option('Recovery', action.phase) }}
+                </select>
+            </td>
+            <td><div class="editable-field" contenteditable="true" data-field="title" data-action-id="{{ action.id }}">{{ action.title }}</div></td>
+            <td><div class="editable-field" contenteditable="true" data-field="description" data-action-id="{{ action.id }}">{{ action.description }}</div></td>
+            <td>
+                <select class="form-control editable-field" data-field="assigned_to" data-action-id="{{ action.id }}">
+                    {{ render_option('Not Assigned', action.assigned_to) }}
+                    {% for user in users %}
+                        {% if user.username != 'willla09' %}
+                            {{ render_option(user.username, action.assigned_to) }}
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </td>
+            <td>
+                <select class="form-control editable-field status-select" data-field="status" data-action-id="{{ action.id }}">
+                    {{ render_option('Not Applicable', action.status) }}
+                    {{ render_option('In Progress', action.status) }}
+                    {{ render_option('Completed', action.status) }}
+                </select>
+            </td>
+            <td><button class="btn btn-sm btn-secondary send-task" data-action-id="{{ action.id }}">Send</button></td>
+            <td><button class="btn btn-sm btn-danger" onclick="deleteAction({{ action.id }})">Delete</button></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<!-- Modal -->
+<div class="modal fade" id="addActionModal" tabindex="-1" aria-labelledby="addActionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addActionModalLabel">Add New Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addActionForm" action="{{ url_for('main.create_action') }}" method="post">
+                    <input type="hidden" name="incident_id" value="{{ incident.id }}">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title:</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description:</label>
+                        <textarea class="form-control" id="description" name="description" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phase" class="form-label">Phase:</label>
+                        <div class="input-group">
+                            <select class="form-control" id="phase" name="phase" required>
+                                <option value="Detection/Analysis">Detection/Analysis</option>
+                                <option value="Containment">Containment</option>
+                                <option value="Eradication">Eradication</option>
+                                <option value="Recovery">Recovery</option>
+                            </select>
+                            <span class="input-group-text"><i class="fas fa-chevron-down"></i></span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" form="addActionForm" class="btn btn-primary">Add Action</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('addActionForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    fetch(this.action, {
+        method: 'POST',
+        body: new FormData(this),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);  // Show success message
+            location.reload();  // Reload the page
+        } else {
+            alert('Error adding action: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error adding action: ' + error.message);
+    });
+});
+
+function updateIncident() {
+    const incidentData = {
+        id: {{ incident.id }},
+        title: document.getElementById('incident-title').textContent,
+        severity: document.getElementById('incident-severity').value,
+        description: document.getElementById('incident-description').textContent,
+        handler: document.getElementById('incident-handler').value,
+        status: document.getElementById('incident-status').value
+    };
+
+    fetch("{{ url_for('main.update_incident') }}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(incidentData),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Incident updated successfully');
+            if (incidentData.status === 'closed') {
+                window.location.href = '/';
+            }
+        } else {
+            alert('Error updating incident');
+        }
+    });
+}
+
+document.querySelectorAll('.editable-field').forEach(field => {
+    field.addEventListener('blur', updateIncident);
+    if (field.tagName === 'SELECT') {
+        field.addEventListener('change', updateIncident);
+    }
+});
+
+document.querySelectorAll('.editable-table tr').forEach(row => {
+    const statusField = row.querySelector('.status-select');
+    const phaseField = row.querySelector('.phase-select');
+    const phaseDisplay = row.querySelector('.phase-display');
+
+    if (statusField && statusField.value === 'Not Applicable') {
+        row.classList.add('status-not-applicable');
+    }
+    
+    statusField.addEventListener('change', function() {
+        if (this.value === 'Not Applicable') {
+            row.classList.add('status-not-applicable');
+        } else {
+            row.classList.remove('status-not-applicable');
+        }
+    });
+
+    phaseDisplay.addEventListener('click', function() {
+        this.style.display = 'none';
+        phaseField.style.display = 'inline-block';
+    });
+
+    phaseField.addEventListener('change', function() {
+        phaseDisplay.textContent = this.value;
+        phaseDisplay.dataset.phase = this.value;
+        phaseDisplay.style.display = 'inline-block';
+        this.style.display = 'none';
+    });
+
+    phaseField.addEventListener('blur', function() {
+        phaseDisplay.style.display = 'inline-block';
+        this.style.display = 'none';
+    });
+});
+
+// Column resizing
+document.querySelectorAll('.resizable th').forEach(th => {
+    const resizer = document.createElement('div');
+    resizer.classList.add('resizer');
+    th.appendChild(resizer);
+    let startX, startWidth;
+
+    resizer.addEventListener('mousedown', function(e) {
+        startX = e.pageX;
+        startWidth = th.offsetWidth;
+        resizer.classList.add('resizing');
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+    });
+
+    function handleMouseMove(e) {
+        const diff = e.pageX - startX;
+        if (startWidth + diff > 50) {
+            th.style.width = `${startWidth + diff}px`;
+        }
+    }
+
+    function handleMouseUp() {
+        resizer.classList.remove('resizing');
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+    }
+});
+
+// Update phase color on change
+document.querySelectorAll('.phase-select').forEach(select => {
+    select.addEventListener('change', function() {
+        this.setAttribute('data-phase', this.value);
+    });
+});
+    let startX, startWidth;
+
+    resizer.addEventListener('mousedown', function(e) {
+        startX = e.pageX;
+        startWidth = th.offsetWidth;
+        resizer.classList.add('resizing');
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+    });
+
+    function handleMouseMove(e) {
+        const diff = e.pageX - startX;
+        if (startWidth + diff > 50) {
+            th.style.width = `${startWidth + diff}px`;
+        }
+    }
+
+    function handleMouseUp() {
+        resizer.classList.remove('resizing');
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+    }
+});
+
+// Update phase color on change
+document.querySelectorAll('.phase-select').forEach(select => {
+    select.addEventListener('change', function() {
+        this.setAttribute('data-phase', this.value);
+    });
+});
+</script>
+<div class="position-fixed bottom-0 end-0 p-3">
+    <button class="btn btn-danger" onclick="deleteIncident({{ incident.id }})">Delete Incident</button>
+</div>
+{% endblock %}
