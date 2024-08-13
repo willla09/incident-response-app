@@ -230,7 +230,7 @@ function sendTaskWithAssignment(actionId) {
         console.log('Check user exists data:', data);
         if (data.exists) {
             console.log(`User exists. Proceeding to send task for action ID: ${actionId}, Assigned User ID: ${assignedUserId}`);
-            return fetch('/send_task', {
+            return fetch('/api/send_task', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
