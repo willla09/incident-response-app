@@ -218,14 +218,24 @@ function sendTaskWithAssignment(actionId) {
         return;
     }
 
-    console.log(`Sending task for action ID: ${actionId}, Assigned User ID: ${assignedUserId}`);
+    console.log(`Checking if user exists for ID: ${assignedUserId}`);
 
-    fetch('/send_task', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ action_id: actionId, assigned_user_id: assignedUserId }),
+    // First, check if the user exists
+    fetch(`/check_user_exists/${assignedUserId}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.exists) {
+            console.log(`User exists. Proceeding to send task for action ID: ${actionId}, Assigned User ID: ${assignedUserId}`);
+            return fetch('/send_task', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ action_id: actionId, assigned_user_id: assignedUserId }),
+            });
+        } else {
+            throw new Error(`User with ID ${assignedUserId} does not exist in the system.`);
+        }
     })
     .then(response => {
         console.log('Response status:', response.status);
